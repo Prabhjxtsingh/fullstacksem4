@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive SVG Drawing Tool</title>
+    <style>
+        /* --- CSS Styles --- */
+        
+        /* Reset and Base Styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f3f4f6; /* Light gray background */
+            color: #333;
+        }
+
+        /* Main Card Container */
+        .card {
+            background: white;
+            width: 90vw; /* Responsive width */
+            max-width: 600px;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* Header / Instructions */
+        header {
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+
+        p {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        /* Toolbar Area */
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f9fafb;
+            padding: 1rem;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .tool-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #4b5563;
+        }
+
+        /* Color Picker Styling */
+        input[type="color"] {
+            -webkit-appearance: none;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%; /* Circular color picker */
+            cursor: pointer;
+            background: none;
+            padding: 0;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        input[type="color"]:hover {
+            transform: scale(1.1);
+        }
+        input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+        input[type="color"]::-webkit-color-swatch {
+            border: none;
+            border-radius: 50%;
+            border: 2px solid #fff;
+        }
+
+        /* Button Styling */
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-primary {
+            background-color: #2563EB;
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-primary:hover {
+            background-color: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-danger {
+            background-color: #ef4444;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+
+        /* SVG Canvas Container */
+        .canvas-wrapper {
+            width: 100%;
+            aspect-ratio: 16 / 9; /* Widescreen aspect ratio */
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+            background-color: #ffffff;
+            background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
+            background-size: 20px 20px; /* Grid dots */
+            cursor: crosshair;
+            transition: border-color 0.3s;
+        }
+
+        .canvas-wrapper:hover {
+            border-color: #2563EB;
+        }
+
+        svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+            touch-action: none; /* Prevent scrolling on mobile while drawing */
+        }
+
+        /* Shape Styling */
+        circle {
+            transition: r 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: popIn 0.3s ease-out forwards;
+        }
+
+        @keyframes popIn {
+            from { r: 0; opacity: 0; }
+        }
+
+        /* Status Footer */
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            color: #6b7280;
+            border-top: 1px solid #f3f4f6;
+            padding-top: 1rem;
+        }
+
+        .count-badge {
+            background: #e0e7ff;
+            color: #3730a3;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <header>
+            <h1>SVG Sketchpad</h1>
+            <p>Select a color and click on the canvas to draw.</p>
+        </header>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <div class="tool-group">
+                <label for="colorPicker">Color:</label>
+                <input type="color" id="colorPicker" value="#2563EB" title="Choose Color">
+            </div>
+            
+            <div class="tool-group">
+                <button id="undoBtn" class="btn btn-primary" title="Remove last shape">
+                    Undo
+                </button>
+                <button id="clearBtn" class="btn btn-danger" title="Clear all">
+                    Clear
+                </button>
+            </div>
+        </div>
+
+        <!-- Drawing Area -->
+        <div class="canvas-wrapper">
+            <svg id="drawingCanvas" viewBox="0 0 800 450" preserveAspectRatio="xMidYMid slice">
+                <!-- Dynamic Shapes go here -->
+            </svg>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <span>Canvas Size: 800x450 (Virtual Units)</span>
+            <div>
+                Circles: <span id="counter" class="count-badge">0</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* --- JavaScript Logic --- */
+        document.addEventListener('DOMContentLoaded', () => {
+            // DOM Element References
+            const canvas = document.getElementById('drawingCanvas');
+            const undoBtn = document.getElementById('undoBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const colorPicker = document.getElementById('colorPicker');
+            const counterDisplay = document.getElementById('counter');
+
+            // Application State
+            let shapesStack = []; 
+
+            // Helper: Update the UI counter
+            function updateCounter() {
+                counterDisplay.textContent = shapesStack.length;
+            }
+
+            /**
+             * Converts Mouse/Touch coordinates to SVG coordinates
+             * This handles resizing, zooming, and different screen sizes effectively.
+             */
+            function getSVGCoordinates(evt) {
+                const point = canvas.createSVGPoint();
+                
+                // Handle both mouse and touch events
+                if (evt.touches && evt.touches.length > 0) {
+                    point.x = evt.touches[0].clientX;
+                    point.y = evt.touches[0].clientY;
+                } else {
+                    point.x = evt.clientX;
+                    point.y = evt.clientY;
+                }
+
+                // Transform screen pixel to SVG coordinate space
+                const CTM = canvas.getScreenCTM();
+                if (!CTM) return { x: 0, y: 0 };
+                
+                return point.matrixTransform(CTM.inverse());
+            }
+
+            // Function to add a shape
+            function addShape(evt) {
+                // Prevent default touch actions (like scrolling)
+                if(evt.type === 'touchstart') evt.preventDefault();
+
+                const coords = getSVGCoordinates(evt);
+                const color = colorPicker.value;
+
+                // Create SVG Circle Element
+                const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                
+                // Set Attributes
+                circle.setAttribute("cx", coords.x);
+                circle.setAttribute("cy", coords.y);
+                circle.setAttribute("r", "15"); // Radius 15 units
+                circle.setAttribute("fill", color);
+                circle.setAttribute("stroke", "white");
+                circle.setAttribute("stroke-width", "2");
+                
+                // Add to DOM
+                canvas.appendChild(circle);
+                
+                // Add to Undo Stack
+                shapesStack.push(circle);
+                
+                updateCounter();
+            }
+
+            // Event Listeners
+            canvas.addEventListener('mousedown', addShape);
+            // Support for touch devices
+            canvas.addEventListener('touchstart', addShape, { passive: false });
+
+            // Undo Button Logic
+            undoBtn.addEventListener('click', () => {
+                if (shapesStack.length > 0) {
+                    const lastShape = shapesStack.pop();
+                    canvas.removeChild(lastShape);
+                    updateCounter();
+                }
+            });
+
+            // Clear Button Logic
+            clearBtn.addEventListener('click', () => {
+                while (shapesStack.length > 0) {
+                    const shape = shapesStack.pop();
+                    if(shape.parentNode === canvas) {
+                        canvas.removeChild(shape);
+                    }
+                }
+                updateCounter();
+            });
+        });
+    </script>
+</body>
+</html>

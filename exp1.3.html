@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard Experiment</title>
+    <style>
+        /* --- CSS Variables & Theme Setup --- */
+        :root {
+            /* Light Mode Variables */
+            --bg-color: #f4f6f8;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --border-color: #e2e8f0;
+            --button-bg: #e2e8f0;
+            --button-text: #333;
+            --accent-color: #3b82f6;
+        }
+
+        /* Dark Mode Variables */
+        [data-theme="dark"] {
+            --bg-color: #0f172a; /* Deep Navy Background */
+            --card-bg: #1e293b;  /* Lighter Navy for Cards */
+            --text-color: #f8fafc;
+            --border-color: #334155;
+            --button-bg: #334155;
+            --button-text: #f8fafc;
+            --accent-color: #60a5fa;
+        }
+
+        /* --- Global Styles --- */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- Header Section --- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .theme-toggle-btn {
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            border: 1px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+        
+        .theme-toggle-btn:hover {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+        }
+
+        .theme-toggle-btn:active {
+            transform: translateY(0);
+        }
+
+        /* --- Main Grid Layout --- */
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 250px 1fr; /* Sidebar fixed width, rest responsive */
+            grid-template-rows: 1fr;
+            gap: 24px;
+            padding: 24px 40px;
+            height: 100%;
+            overflow: hidden; /* Prevent body scroll if content fits */
+        }
+
+        /* --- Cards Styling --- */
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            font-weight: 500;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            transition: background-color 0.3s, border-color 0.3s;
+            color: var(--accent-color);
+        }
+
+        /* Specific Areas */
+        .navigation {
+            /* Takes up the full height of the left column */
+            height: 100%; 
+            align-items: flex-start;
+            padding-top: 40px;
+        }
+        
+        /* Simulating nav items */
+        .navigation::after {
+            content: "Dashboard \A Reports \A Settings \A Logout";
+            white-space: pre-wrap;
+            text-align: center;
+            width: 100%;
+            line-height: 3;
+            color: var(--text-color);
+            opacity: 0.8;
+            font-size: 1rem;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* 3 Equal columns */
+            gap: 24px;
+            align-items: start;
+            overflow-y: auto; /* Allow scrolling inside content area */
+            padding-bottom: 20px;
+        }
+        
+        .content-card {
+            aspect-ratio: 1/1; /* Makes the boxes square */
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .content-card span {
+            font-size: 2rem;
+        }
+
+        /* --- Responsive Design (Mobile) --- */
+        @media (max-width: 768px) {
+            header {
+                padding: 15px 20px;
+            }
+            
+            .dashboard-container {
+                grid-template-columns: 1fr; /* Stack vertically on mobile */
+                grid-template-rows: auto 1fr;
+                padding: 20px;
+                overflow-y: auto;
+            }
+            
+            .navigation {
+                height: auto; /* Shorten sidebar on mobile */
+                padding: 20px;
+                align-items: center;
+            }
+            
+            .navigation::after {
+                content: "Menu Items";
+                line-height: normal;
+            }
+
+            .content-grid {
+                grid-template-columns: 1fr; /* Stack content cards */
+            }
+            
+            .content-card {
+                aspect-ratio: auto;
+                height: 150px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Admin Dashboard</h1>
+        <button id="theme-btn" class="theme-toggle-btn">
+            <span id="icon">☀️</span> <span id="btn-text">Light Mode</span>
+        </button>
+    </header>
+
+    <main class="dashboard-container">
+        <!-- Left Sidebar -->
+        <aside class="card navigation">
+            <!-- Content generated via CSS pseudo-element for demo -->
+        </aside>
+
+        <!-- Right Content Area -->
+        <section class="content-grid">
+            <div class="card content-card">
+                <span>📊</span>
+                Analytics
+            </div>
+            <div class="card content-card">
+                <span>👥</span>
+                Users
+            </div>
+            <div class="card content-card">
+                <span>⚙️</span>
+                Settings
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Select elements
+        const htmlElement = document.documentElement;
+        const themeBtn = document.getElementById('theme-btn');
+        const btnText = document.getElementById('btn-text');
+        const icon = document.getElementById('icon');
+
+        // Function to set theme
+        function setTheme(themeName) {
+            htmlElement.setAttribute('data-theme', themeName);
+            localStorage.setItem('theme', themeName);
+            
+            if (themeName === 'dark') {
+                btnText.innerText = "Light Mode";
+                icon.innerText = "☀️";
+            } else {
+                btnText.innerText = "Dark Mode";
+                icon.innerText = "🌙";
+            }
+        }
+
+        // Initialize: Check localStorage or default to 'dark'
+        // Using 'dark' default to match your request image
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        setTheme(savedTheme);
+
+        // Toggle Event Listener
+        themeBtn.addEventListener('click', () => {
+            const currentTheme = htmlElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            setTheme(newTheme);
+        });
+    </script>
+</body>
+</html>

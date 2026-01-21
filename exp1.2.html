@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banking Interface - Experiment 2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Phosphor Icons for modern visuals -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        /* Custom styles to supplement Tailwind */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+
+        /* Smooth transition for balance updates */
+        #balance-amount {
+            transition: color 0.3s ease;
+        }
+
+        .transaction-btn:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <!-- Main Container -->
+    <div class="w-full max-w-4xl bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col md:flex-row">
+        
+        <!-- Left Panel: Balance & Branding -->
+        <!-- Requirement: Design balance display with CSS Flexbox -->
+        <!-- Requirement: Implement responsive layout (md:w-1/2 changes width on medium screens) -->
+        <div class="w-full md:w-5/12 bg-blue-600 p-8 text-white flex flex-col justify-between relative overflow-hidden">
+            <!-- Decorative circle -->
+            <div class="absolute -top-10 -left-10 w-40 h-40 bg-blue-500 rounded-full opacity-50 blur-xl"></div>
+            
+            <div class="relative z-10">
+                <div class="flex items-center gap-2 mb-8">
+                    <i class="ph ph-bank text-3xl"></i>
+                    <h1 class="text-xl font-bold tracking-wider">SECURE BANK</h1>
+                </div>
+
+                <div>
+                    <p class="text-blue-200 text-sm font-medium mb-1">Total Balance</p>
+                    <!-- Flexbox used here for alignment -->
+                    <div class="flex items-baseline gap-1">
+                        <span class="text-2xl font-light">$</span>
+                        <span id="balance-amount" class="text-5xl font-bold">0.00</span>
+                    </div>
+                    <p class="text-blue-200 text-xs mt-2 opacity-80">Account: **** 4589</p>
+                </div>
+            </div>
+
+            <div class="mt-8 md:mt-0 relative z-10">
+                <div class="bg-blue-700 bg-opacity-50 p-4 rounded-lg backdrop-blur-sm border border-blue-500">
+                    <p class="text-xs text-blue-100 mb-2">Recent Activity</p>
+                    <div id="last-action" class="text-sm font-medium">No recent transactions</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Controls -->
+        <div class="w-full md:w-7/12 p-8 bg-white">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Manage Funds</h2>
+
+            <!-- Feedback Message Area -->
+            <!-- Requirement: Add input validation and feedback -->
+            <div id="message-box" class="hidden mb-6 p-3 rounded-lg text-sm font-medium transition-all duration-300">
+                <!-- Messages will be injected here via JS -->
+            </div>
+
+            <div class="space-y-6">
+                <!-- Input Section -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Enter Amount</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 font-bold">$</span>
+                        <input type="number" id="amount-input" 
+                            class="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                            placeholder="0.00">
+                    </div>
+                </div>
+
+                <!-- Transaction Buttons -->
+                <!-- Requirement: Create transaction buttons with JavaScript event handlers -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <button onclick="handleDeposit()" 
+                        class="transaction-btn group flex items-center justify-center gap-2 py-3 px-6 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-semibold shadow-lg shadow-emerald-200 transition-all">
+                        <i class="ph ph-arrow-down text-xl group-hover:animate-bounce"></i>
+                        Deposit
+                    </button>
+                    
+                    <button onclick="handleWithdraw()" 
+                        class="transaction-btn group flex items-center justify-center gap-2 py-3 px-6 bg-rose-500 hover:bg-rose-600 text-white rounded-xl font-semibold shadow-lg shadow-rose-200 transition-all">
+                        <i class="ph ph-arrow-up text-xl group-hover:-translate-y-1 transition-transform"></i>
+                        Withdraw
+                    </button>
+                </div>
+
+                <!-- Features Grid -->
+                <div class="grid grid-cols-2 gap-4 mt-8 pt-8 border-t border-gray-100">
+                    <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                        <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                            <i class="ph ph-shield-check text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500">Security</p>
+                            <p class="text-sm font-semibold text-gray-800">Encrypted</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                        <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
+                            <i class="ph ph-clock text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500">Processing</p>
+                            <p class="text-sm font-semibold text-gray-800">Instant</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State Management
+        let currentBalance = 0.00;
+
+        // DOM Elements
+        const balanceDisplay = document.getElementById('balance-amount');
+        const amountInput = document.getElementById('amount-input');
+        const messageBox = document.getElementById('message-box');
+        const lastActionDisplay = document.getElementById('last-action');
+
+        // Helper Function: Format Currency
+        function formatCurrency(amount) {
+            return amount.toFixed(2);
+        }
+
+        // Helper Function: Show Feedback Message
+        function showMessage(text, type) {
+            messageBox.textContent = text;
+            messageBox.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'bg-green-100', 'text-green-700');
+            
+            if (type === 'error') {
+                messageBox.classList.add('bg-red-100', 'text-red-700', 'flex');
+            } else {
+                messageBox.classList.add('bg-green-100', 'text-green-700', 'flex');
+            }
+
+            // Hide message after 3 seconds
+            setTimeout(() => {
+                messageBox.classList.add('hidden');
+            }, 3000);
+        }
+
+        // Helper Function: Validate Input
+        function getValidAmount() {
+            const value = parseFloat(amountInput.value);
+            
+            if (isNaN(value) || value <= 0) {
+                showMessage("Please enter a valid positive amount.", "error");
+                return null;
+            }
+            return value;
+        }
+
+        // Event Handler: Deposit
+        function handleDeposit() {
+            const amount = getValidAmount();
+            if (amount === null) return;
+
+            currentBalance += amount;
+            updateUI();
+            
+            showMessage(`Successfully deposited $${formatCurrency(amount)}`, "success");
+            lastActionDisplay.innerHTML = `Received <span class="text-green-300">+$${formatCurrency(amount)}</span> just now`;
+            
+            // Clear input
+            amountInput.value = '';
+        }
+
+        // Event Handler: Withdraw
+        function handleWithdraw() {
+            const amount = getValidAmount();
+            if (amount === null) return;
+
+            if (amount > currentBalance) {
+                showMessage("Insufficient funds for this transaction.", "error");
+                // Shake animation for visual feedback on input
+                amountInput.classList.add('ring-2', 'ring-red-500', 'animate-pulse');
+                setTimeout(() => amountInput.classList.remove('ring-2', 'ring-red-500', 'animate-pulse'), 500);
+                return;
+            }
+
+            currentBalance -= amount;
+            updateUI();
+            
+            showMessage(`Successfully withdrew $${formatCurrency(amount)}`, "success");
+            lastActionDisplay.innerHTML = `Sent <span class="text-red-300">-$${formatCurrency(amount)}</span> just now`;
+            
+            // Clear input
+            amountInput.value = '';
+        }
+
+        // Update Balance Display
+        function updateUI() {
+            balanceDisplay.textContent = formatCurrency(currentBalance);
+        }
+
+        // Add Enter key support
+        amountInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                handleDeposit(); // Default action on Enter
+            }
+        });
+    </script>
+</body>
+</html>

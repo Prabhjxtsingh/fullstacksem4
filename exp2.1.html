@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Character Counter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Smooth transitions for all changing properties */
+        .transition-all-custom {
+            transition: all 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-900 flex items-center justify-center p-4 font-sans text-slate-200">
+
+    <div class="w-full max-w-md bg-slate-800 rounded-2xl shadow-xl overflow-hidden border border-slate-700">
+        
+        <!-- Header -->
+        <div class="bg-slate-900/50 p-6 border-b border-slate-700">
+            <h1 class="text-xl font-bold text-white flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></svg>
+                Character Counter
+            </h1>
+            <p class="text-sm text-slate-400 mt-1">
+                Real-time input tracking experiment
+            </p>
+        </div>
+
+        <!-- Input Area -->
+        <div class="p-6 space-y-4">
+            <div class="relative">
+                <textarea
+                    id="textInput"
+                    placeholder="Start typing your text here..."
+                    maxlength="200"
+                    class="w-full h-40 bg-slate-900 text-white rounded-xl p-4 resize-none outline-none border border-gray-700 transition-all-custom focus:ring-4 focus:border-blue-500 focus:ring-blue-500/20"
+                ></textarea>
+                
+                <!-- Limit Warning Indicators (Hidden by default) -->
+                <div id="nearLimitBadge" class="hidden absolute top-4 right-4 text-xs font-bold text-orange-500 bg-orange-500/10 px-2 py-1 rounded-full animate-pulse">
+                    Near Limit
+                </div>
+                <div id="maxLimitBadge" class="hidden absolute top-4 right-4 text-xs font-bold text-red-500 bg-red-500/10 px-2 py-1 rounded-full animate-bounce">
+                    Max Reached
+                </div>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="flex justify-between items-center bg-slate-900/50 rounded-lg p-4 border border-slate-700">
+                <div class="space-y-1">
+                    <span class="text-xs text-slate-500 uppercase tracking-wider font-semibold">Total Characters</span>
+                    <div id="charCountDisplay" class="text-2xl font-bold transition-all-custom text-gray-400">
+                        0 <span class="text-base text-slate-600 font-normal">/ 200</span>
+                    </div>
+                </div>
+                
+                <!-- Circular Progress -->
+                <div class="relative w-12 h-12 flex items-center justify-center">
+                    <svg class="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                        <!-- Background Circle -->
+                        <path
+                            class="text-slate-700"
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="4"
+                        />
+                        <!-- Progress Circle -->
+                        <path
+                            id="progressRing"
+                            class="transition-all duration-500 ease-out text-blue-500"
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="4"
+                            stroke-dasharray="0, 100"
+                        />
+                    </svg>
+                </div>
+            </div>
+            
+            <!-- Word Count -->
+            <div class="text-xs text-slate-500 text-center">
+                Word Count: <span id="wordCount" class="text-slate-300">0</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const textInput = document.getElementById('textInput');
+        const charCountDisplay = document.getElementById('charCountDisplay');
+        const progressRing = document.getElementById('progressRing');
+        const wordCountDisplay = document.getElementById('wordCount');
+        const nearLimitBadge = document.getElementById('nearLimitBadge');
+        const maxLimitBadge = document.getElementById('maxLimitBadge');
+
+        const LIMIT = 200;
+
+        // Colors configurations
+        const COLORS = {
+            normal: { text: 'text-gray-400', ring: 'text-blue-500', border: 'focus:border-blue-500', ringShadow: 'focus:ring-blue-500/20' },
+            warning: { text: 'text-orange-500', ring: 'text-orange-500', border: 'border-orange-500', ringShadow: 'ring-orange-500/20' },
+            danger: { text: 'text-red-500', ring: 'text-red-500', border: 'border-red-500', ringShadow: 'ring-red-500/20' }
+        };
+
+        // Update logic
+        function updateCounter() {
+            const text = textInput.value;
+            const length = text.length;
+            const percentage = (length / LIMIT) * 100;
+
+            // 1. Update Text Display
+            charCountDisplay.innerHTML = `${length} <span class="text-base text-slate-600 font-normal">/ ${LIMIT}</span>`;
+
+            // 2. Update Progress Ring
+            // The circumference is approx 100 in this coordinate system, so percentage maps directly
+            progressRing.style.strokeDasharray = `${percentage}, 100`;
+
+            // 3. Update Word Count
+            const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+            wordCountDisplay.textContent = words;
+
+            // 4. Update Colors & Badges
+            updateVisualState(percentage);
+        }
+
+        function updateVisualState(percentage) {
+            // Reset base classes for textarea to ensure we don't stack classes
+            // We keep the static structural classes and remove dynamic color ones
+            const baseClasses = "w-full h-40 bg-slate-900 text-white rounded-xl p-4 resize-none outline-none border transition-all-custom focus:ring-4";
+            
+            // Determine state
+            let state = 'normal';
+            if (percentage >= 100) state = 'danger';
+            else if (percentage >= 90) state = 'warning';
+
+            // Apply classes based on state
+            const config = COLORS[state];
+
+            // Text Area Styling
+            if (state === 'normal') {
+                // Normal state needs the default borders + focus states
+                textInput.className = `${baseClasses} border-gray-700 ${config.border} ${config.ringShadow}`;
+            } else {
+                // Warning/Danger states override the border immediately (not just on focus)
+                textInput.className = `${baseClasses} ${config.border} ${config.ringShadow}`;
+            }
+
+            // Character Count Text Color
+            // Remove all possible text colors then add current
+            charCountDisplay.classList.remove('text-gray-400', 'text-orange-500', 'text-red-500');
+            charCountDisplay.classList.add(config.text);
+
+            // Ring Color
+            progressRing.classList.remove('text-blue-500', 'text-orange-500', 'text-red-500');
+            progressRing.classList.add(config.ring);
+
+            // Badges Visibility
+            if (state === 'warning') {
+                nearLimitBadge.classList.remove('hidden');
+                maxLimitBadge.classList.add('hidden');
+            } else if (state === 'danger') {
+                nearLimitBadge.classList.add('hidden');
+                maxLimitBadge.classList.remove('hidden');
+            } else {
+                nearLimitBadge.classList.add('hidden');
+                maxLimitBadge.classList.add('hidden');
+            }
+        }
+
+        // Event Listeners
+        textInput.addEventListener('input', updateCounter);
+
+        // Initial call to set state on load (e.g. if browser caches input)
+        updateCounter();
+
+    </script>
+</body>
+</html>
